@@ -1,0 +1,122 @@
+openapi: 3.0.0
+info:
+  title: Agentic Commerce Catalog & Gateway API
+  description: API for autonomous AI buyers to discover products and transact against pre-authorized financial Mandates. This reference implementation mirrors Google AP2's mandate concept and acts as the authorization layer for NPCI-powered in-app checkout pilots.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+paths:
+  /catalog/products:
+    get:
+      summary: Discover available products
+      description: Agents can poll this endpoint to build internal knowledge of the merchant's catalog.
+      responses:
+        '200':
+          description: A list of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  /gateway/purchase:
+    post:
+      summary: Submit a transaction request against a Mandate
+      description: The Two-Phase Commit Gateway validates the requested product and amount against the buyer's mandate bounds.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequest'
+      responses:
+        '200':
+          description: Purchase approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResult'
+        '202':
+          description: Purchase intercepted for Human-in-the-Loop review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResult'
+        '422':
+          description: Purchase rejected by Gateway constraints
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Key required for all external Agent requests to the Gateway and Catalog.
+security:
+  - ApiKeyAuth: []
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        priceInr:
+          type: integer
+          description: Price in paise
+        stock:
+          type: integer
+    PurchaseRequest:
+      type: object
+      required:
+        - mandateId
+        - buyerId
+        - productId
+        - requestedAmount
+        - agentReasoning
+        - idempotencyKey
+      properties:
+        mandateId:
+          type: string
+          description: The AP2-style mandate authorizing this transaction
+        buyerId:
+          type: string
+        productId:
+          type: string
+        requestedAmount:
+          type: integer
+          description: Amount in paise to reserve from the mandate
+        agentReasoning:
+          type: string
+          description: The LLM's justification for the purchase for auditability
+        idempotencyKey:
+          type: string
+    PurchaseResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected, failed, pending_human_review]
+        orderId:
+          type: string
+          description: The Razorpay Order ID (if approved)
+        reason:
+          type: string
+          description: The Gateway's rejection reason or approval confirmation
