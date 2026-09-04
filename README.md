@@ -53,36 +53,44 @@ As a hackathon build, this architecture takes deliberate shortcuts to prove the 
 
 ```mermaid
 graph LR
+    %% Styling
+    classDef ai fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef ui fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff;
+    classDef gateway fill:#ef4444,stroke:#b91c1c,stroke-width:3px,color:#fff;
+    classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
+    classDef db fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
+    classDef external fill:#374151,stroke:#111827,stroke-width:2px,color:#fff;
+
     %% Actors
     User([User])
 
     %% Client Tier
     subgraph Clients [Client Apps]
         direction TB
-        Agent[Buyer Agent<br/>Groq GPT-OSS-120B]
-        Frontend[React + Vite UI]
+        Agent[Buyer Agent<br/>Groq GPT-OSS-120B]:::ai
+        Frontend[React + Vite UI]:::ui
     end
 
     %% Service Tier
     subgraph TrustBoundary [Fastify Backend - Trust Boundary]
         direction TB
-        Catalog[Catalog Service]
-        Gateway[Purchase Gateway]
-        Mandate[Mandate Service]
-        Audit[Audit Service]
+        Catalog[Catalog Service]:::backend
+        Gateway[Purchase Gateway]:::gateway
+        Mandate[Mandate Service]:::backend
+        Audit[Audit Service]:::backend
     end
 
     %% Persistence Tier
     subgraph Persistence [PostgreSQL Database]
         direction TB
-        DB_Products[(Products)]
-        DB_Idempotency[(Idempotency Keys)]
-        DB_Mandates[(Mandates)]
-        DB_Audit[(Audit Logs)]
+        DB_Products[(Products)]:::db
+        DB_Idempotency[(Idempotency Keys)]:::db
+        DB_Mandates[(Mandates)]:::db
+        DB_Audit[(Audit Logs)]:::db
     end
 
     %% External
-    Razorpay[Razorpay API<br/>Test Mode]
+    Razorpay[Razorpay API<br/>Test Mode]:::external
 
     %% Flows
     User -->|Goal: Buy Shoes| Agent
@@ -105,6 +113,13 @@ graph LR
     Mandate --- DB_Mandates
     Audit --- DB_Audit
 ```
+
+### 🔍 How the Architecture Works
+The system is divided into four distinct tiers to guarantee security:
+1. **The Clients (Blue/Purple):** The AI Agent and the human UI exist outside the trust boundary. The AI can make any decision it wants, but it has zero direct access to money.
+2. **The Gateway (Red):** This is the core "Two-Phase Commit" trust boundary. Every time the AI tries to buy something, the Gateway intercepts the request.
+3. **The Microservices (Green):** The Gateway calls these internal services to deterministically verify if the AI has enough budget, if the category is allowed, and if the item is in stock. 
+4. **The Database (Orange):** All state, including mandates and idempotency keys, is locked safely in PostgreSQL using Drizzle ORM. If an AI goes rogue, the database strictly blocks the transaction.
 
 ---
 
