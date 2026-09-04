@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="./docs/banner.png" alt="Agentic Commerce Banner" width="100%">
+  <img src="./docs/banner.png" alt="BoundPay Banner" width="700">
 </div>
 
-# Agentic Commerce: Autonomous Growth & Bounded Trust
+# BoundPay: Autonomous Growth & Bounded Trust
 
 A production-grade reference implementation of agent-to-agent commerce built for the **Razorpay AI Buildathon (Track 01)**. This system proves that you can securely unleash an autonomous AI buyer to grow a merchant's revenue, while deterministically bounding its access to money.
 
