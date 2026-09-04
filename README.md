@@ -52,29 +52,58 @@ As a hackathon build, this architecture takes deliberate shortcuts to prove the 
 ## 🧩 Architecture
 
 ```mermaid
-graph TD
-    User([User]) --> |Goal: Buy running shoes| Agent[Buyer Agent<br/>Groq Llama 3.1 70B]
-    User --> |Create Mandate| Frontend[React + Vite Frontend]
-    
-    Frontend -.-> |Fetch/Create Mandates| MandateService[Mandate Service]
-    Frontend -.-> |View Audit Logs| AuditService[Audit Log Service]
-    
-    subgraph Trust Boundary [Backend Services - Fastify]
-        Agent --> |Query Options| CatalogService[Catalog Service]
-        Agent --> |POST /gateway/purchase| Gateway[Purchase Gateway]
-        
-        Gateway --> |1. Validate Bounds| MandateService
-        Gateway --> |2. Check Stock| CatalogService
-        Gateway -.-> |3. Write Decision| AuditService
-        Gateway --> |4. Capture Payment| Razorpay[Razorpay API Test Mode]
+graph LR
+    %% Actors
+    User([User])
+
+    %% Client Tier
+    subgraph Clients [Client Apps]
+        direction TB
+        Agent[Buyer Agent<br/>Groq GPT-OSS-120B]
+        Frontend[React + Vite UI]
     end
-    
-    subgraph Database [PostgreSQL via Drizzle ORM]
-        CatalogService --> DB_Products[(Products Table)]
-        MandateService --> DB_Mandates[(Mandates Table)]
-        AuditService --> DB_Audit[(Audit Logs Table)]
-        Gateway --> DB_Idempotency[(Idempotency Keys)]
+
+    %% Service Tier
+    subgraph TrustBoundary [Fastify Backend - Trust Boundary]
+        direction TB
+        Catalog[Catalog Service]
+        Gateway[Purchase Gateway]
+        Mandate[Mandate Service]
+        Audit[Audit Service]
     end
+
+    %% Persistence Tier
+    subgraph Persistence [PostgreSQL Database]
+        direction TB
+        DB_Products[(Products)]
+        DB_Idempotency[(Idempotency Keys)]
+        DB_Mandates[(Mandates)]
+        DB_Audit[(Audit Logs)]
+    end
+
+    %% External
+    Razorpay[Razorpay API<br/>Test Mode]
+
+    %% Flows
+    User -->|Goal: Buy Shoes| Agent
+    User -->|Create Limits| Frontend
+
+    Agent -->|Query Catalog| Catalog
+    Agent -->|POST Purchase| Gateway
+
+    Frontend -->|Manage| Mandate
+    Frontend -->|View Logs| Audit
+
+    Gateway -->|1. Validate Bounds| Mandate
+    Gateway -->|2. Check Stock| Catalog
+    Gateway -->|3. Capture| Razorpay
+    Gateway -.->|4. Record| Audit
+
+    %% DB Connections
+    Catalog --- DB_Products
+    Gateway --- DB_Idempotency
+    Mandate --- DB_Mandates
+    Audit --- DB_Audit
 ```
 
 ---
