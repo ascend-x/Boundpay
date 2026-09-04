@@ -14,7 +14,7 @@ function App() {
       <nav className="navbar" id="navbar">
         <div className="logo">
           <div className="logo-shield">⚡</div>
-          <span>Agentic</span>
+          <span>BoundPay</span>
         </div>
         <div className="nav-links">
           <NavLink to="/agent" className={({ isActive }) => (isActive ? 'nav-ws-badge' : '')}>
