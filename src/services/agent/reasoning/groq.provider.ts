@@ -95,7 +95,7 @@ export class GroqReasoningProvider implements ReasoningProvider {
         { role: 'user', content: userMessage },
       ],
       temperature: 0,
-      max_tokens: 2048,
+      max_tokens: 1000,
       ...(strictJson ? { response_format: { type: 'json_object' as const } } : {}),
     });
 
