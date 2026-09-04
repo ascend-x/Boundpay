@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./docs/banner.png" alt="Agentic Commerce Banner" width="100%">
+</div>
+
 # Agentic Commerce: Autonomous Growth & Bounded Trust
 
 A production-grade reference implementation of agent-to-agent commerce built for the **Razorpay AI Buildathon (Track 01)**. This system proves that you can securely unleash an autonomous AI buyer to grow a merchant's revenue, while deterministically bounding its access to money.
@@ -49,7 +53,7 @@ As a hackathon build, this architecture takes deliberate shortcuts to prove the 
 
 ```mermaid
 graph TD
-    User([User]) --> |Goal: "Buy running shoes"| Agent[Buyer Agent<br/>Groq Llama 3.1 70B]
+    User([User]) --> |Goal: Buy running shoes| Agent[Buyer Agent<br/>Groq Llama 3.1 70B]
     User --> |Create Mandate| Frontend[React + Vite Frontend]
     
     Frontend -.-> |Fetch/Create Mandates| MandateService[Mandate Service]
